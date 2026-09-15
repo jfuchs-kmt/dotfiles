@@ -44,6 +44,7 @@ cnoremap <C-l> <Right>
 " Custom leader remap
 nnoremap <SPACE> <Nop>
 let mapleader = " "
+nnoremap <leader>e :Ex<CR>
 
 " Fortran
 let fortran_free_source=1
@@ -60,3 +61,87 @@ let &t_SR = "\e[4 q"
 let &t_EI = "\e[2 q"
 set ttimeout
 set ttimeoutlen=10
+
+let s:plug_path = expand('~/.vim/autoload/plug.vim')
+if filereadable(s:plug_path)
+    call plug#begin()
+
+    Plug 'tpope/vim-fugitive'
+
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+    Plug 'junegunn/fzf.vim'
+
+    Plug 'prabirshrestha/vim-lsp'
+    Plug 'prabirshrestha/asyncomplete.vim'
+    Plug 'prabirshrestha/asyncomplete-lsp.vim'
+    Plug 'hrsh7th/vim-vsnip'
+    Plug 'hrsh7th/vim-vsnip-integ'
+
+    call plug#end()
+
+    nnoremap <leader>ff :Files<CR>
+    nnoremap <leader>fh :History<CR>
+    nnoremap <leader>fb :Buffers<CR>
+    nnoremap <leader>fr :Rg<Space>
+
+    if executable('fortls')
+        augroup LspFortran
+            autocmd!
+            autocmd User lsp_setup call lsp#register_server({
+                        \ 'name': 'fortls',
+                        \ 'cmd': {server_info -> [
+                        \   'fortls',
+                        \   '--notify_init',
+                        \   '--hover_signature',
+                        \   '--hover_language=fortran',
+                        \   '--use_signature_help',
+                        \   '--autocomplete_no_snippets'
+                        \ ]},
+                        \ 'allowlist': ['fortran'],
+                        \ })
+        augroup END
+    endif
+
+    if executable('clangd')
+        augroup LspClangd
+            autocmd!
+            autocmd User lsp_setup call lsp#register_server({
+                        \ 'name': 'clangd',
+                        \ 'cmd': {server_info -> [
+                        \   'clangd',
+                        \   '--background-index',
+                        \   '--clang-tidy',
+                        \   '--completion-style=detailed'
+                        \ ]},
+                        \ 'allowlist': ['c', 'cpp', 'objc', 'objcpp', 'cuda'],
+                        \ })
+        augroup END
+    endif
+
+    function! s:on_lsp_buffer_enabled() abort
+        setlocal omnifunc=lsp#complete
+        setlocal signcolumn=yes
+
+        if exists('+tagfunc')
+            setlocal tagfunc=lsp#tagfunc
+        endif
+
+        nmap <buffer> gd <plug>(lsp-definition)
+        nmap <buffer> gs <plug>(lsp-document-symbol-search)
+        nmap <buffer> gS <plug>(lsp-workspace-symbol-search)
+        nmap <buffer> gr <plug>(lsp-references)
+        nmap <buffer> gi <plug>(lsp-implementation)
+        nmap <buffer> gt <plug>(lsp-type-definition)
+        nmap <buffer> <leader>rn <plug>(lsp-rename)
+        nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+        nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+        nmap <buffer> K <plug>(lsp-hover)
+    endfunction
+
+    augroup lsp_install
+        autocmd!
+        autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+    augroup END
+endif
+
+
