@@ -103,16 +103,24 @@ if filereadable(s:plug_path)
     endif
 
     if executable('clangd')
+        function! s:clangd_cmd(server_info) abort
+            if expand('%:e') ==# ''
+                return []
+            endif
+
+            return [
+                        \ 'clangd',
+                        \ '--background-index',
+                        \ '--clang-tidy',
+                        \ '--completion-style=detailed'
+                        \ ]
+        endfunction
+
         augroup LspClangd
             autocmd!
             autocmd User lsp_setup call lsp#register_server({
                         \ 'name': 'clangd',
-                        \ 'cmd': {server_info -> [
-                        \   'clangd',
-                        \   '--background-index',
-                        \   '--clang-tidy',
-                        \   '--completion-style=detailed'
-                        \ ]},
+                        \ 'cmd': function('s:clangd_cmd'),
                         \ 'allowlist': ['c', 'cpp', 'objc', 'objcpp', 'cuda'],
                         \ })
         augroup END
