@@ -24,6 +24,7 @@ set autoindent
 " Search
 set incsearch
 set hlsearch
+set shortmess-=S
 
 " Return to last edit position when opening files
 autocmd BufReadPost *
