@@ -11,8 +11,9 @@ set splitright
 set splitbelow
 
 " Styling
-colorscheme slate
 set background=dark
+set termguicolors
+colorscheme slate
 
 " Tabs/Indent
 set expandtab
@@ -67,6 +68,9 @@ let s:plug_path = expand('~/.vim/autoload/plug.vim')
 if filereadable(s:plug_path)
     call plug#begin()
 
+    Plug 'itchyny/lightline.vim'
+    Plug 'catppuccin/vim', { 'as': 'catppuccin', 'branch': 'main' }
+
     Plug 'tpope/vim-fugitive'
 
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -79,6 +83,9 @@ if filereadable(s:plug_path)
     Plug 'hrsh7th/vim-vsnip-integ'
 
     call plug#end()
+
+    colorscheme catppuccin_macchiato
+    let g:lightline = {'colorscheme': 'catppuccin_macchiato'}
 
     nnoremap <leader>ff :Files<CR>
     nnoremap <leader>fh :History<CR>
@@ -127,6 +134,20 @@ if filereadable(s:plug_path)
         augroup END
     endif
 
+    if executable('pyright-langserver')
+        augroup LspPython
+            autocmd!
+            autocmd User lsp_setup call lsp#register_server({
+                        \ 'name': 'pyright',
+                        \ 'cmd': {server_info -> [
+                        \   'pyright-langserver',
+                        \   '--stdio'
+                        \ ]},
+                        \ 'allowlist': ['python'],
+                        \ })
+        augroup END
+    endif
+
     function! s:on_lsp_buffer_enabled() abort
         setlocal omnifunc=lsp#complete
         setlocal signcolumn=yes
@@ -152,5 +173,3 @@ if filereadable(s:plug_path)
         autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
     augroup END
 endif
-
-
